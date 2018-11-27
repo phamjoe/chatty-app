@@ -1,55 +1,99 @@
 import React, {Component} from 'react';
 import ChatBar from './ChatBar.jsx';
 import MessageList from './MessageList.jsx';
-
-
+import Message from './Message.jsx';
 
 class App extends Component {
   constructor(){
     super();
-    this.addMessage = this.addMessage.bind(this);
+    this.socket = new WebSocket("ws://"+window.location.hostname+":3001");
 
     this.state= {
-      currentUser: {name: "Bob"}, // optional. if currentUser is not defined, it means the user is Anonymous
-      messages: [
-        { id: 1,
-          username: "Bob",
-          content: "Has anyone seen my marbles?",
-        },
-        {
-          id: 2,
-          username: "Anonymous",
-          content: "No, I think you lost them. You lost your marbles Bob. You lost them for good."
-        }
-      ]
+      currentUser: {name: "Anonymous"}, // optional. if currentUser is not defined, it means the user is Anonymous
+      messages: [],
+      notification: '',
+      usersOnline: 0
     };
   }
   
   componentDidMount() {
     console.log("componentDidMount <App />");
+    this.socket.addEventListener('open', function (event) {
+      console.log("Connected to Server"); 
+    });
 
-    setTimeout(() => {
-      console.log("Simulating incoming message");
-      // Add a new message to the list of messages in the data store
-      const newMessage = {id: 3, username: "Michelle", content: "Hello there!"};
-      const messages = this.state.messages.concat(newMessage)
-      // Update the state of the app component.
-      // Calling setState will trigger a call to render() in App and all child components.
-      this.setState({messages: messages})
-    }, 3000);
+    this.socket.onmessage = (event) => {
+      let eventParse = JSON.parse(event.data) 
+      //this.setState({usersOnline : eventParse});  
+      //console.log(event.data);
+      switch(eventParse.type) {
+        case "incomingMessage":
+          // handle incoming message
+          const newMsg = {
+                id: eventParse.id,
+                username: eventParse.username,
+                content: eventParse.content,
+              }    
+              let oldMessage = this.state.messages;
+              let newMessages = [...oldMessage, newMsg];
+              this.setState({messages : newMessages});             
+          break;
+
+        case "incomingNotification":
+          // handle incoming notification
+          const newNotify = {
+            username: eventParse.username,
+            content: eventParse.content,
+          }    
+
+          oldMessage = this.state.messages;
+          newMessages = [...oldMessage, newNotify];
+          this.setState({
+          currentUser : 
+            {name : eventParse.username},
+          notification : eventParse.content
+        })
+          break;
+
+        case "incomingUsers":
+          this.setState({usersOnline : eventParse.numberOfUsers});    
+          break;
+
+        default:
+          // show an error in the console if the message type is unknown
+          throw new Error("Unknown event type " + data.type);
+      }
+    }
   }
 
-  addMessage(msg) {
-    console.log(this.state.messages);
+  addMessage = (msg) => {
     const newMessage = {
-      id: 4,
+      type: "postMessage",
       username: this.state.currentUser.name,
       content: msg,
     }
-    const oldMessage = this.state.messages;
-    const newMessages = [...oldMessage, newMessage];
-    this.setState({messages : newMessages});
+    //Send message to server
+    this.socket.send(JSON.stringify(newMessage));
+
   };
+
+  changeUsername = (usr) => {
+    if(this.state.currentUser.name !== usr){
+      const newUsername = {
+        type: "postNotification",
+        content: `${this.state.currentUser.name} has changed their name to ${usr}`,
+        username: usr,
+      }
+      this.socket.send(JSON.stringify(newUsername));
+    }
+  }
+
+  getUsersOnline = () =>{
+    const users = {
+      type: "postUsers",
+    }
+    this.socket.send(JSON.stringify(users));
+  }
 
 
   render() {
@@ -57,9 +101,11 @@ class App extends Component {
        <div>   
           <nav className="navbar">
             <a href="/" className="navbar-brand">Chatty</a>
+           <span className="users">{this.state.usersOnline} Users Online</span>
            </nav>
-          <MessageList messages={this.state.messages}/>
-          <ChatBar user={this.state.currentUser.name} messages={this.addMessage}/>
+          <MessageList messages={this.state.messages} />
+          <ChatBar user={this.changeUsername} messages={this.addMessage}/>
+          <Message notification={this.state.notification}/>
        </div>
     );
   }

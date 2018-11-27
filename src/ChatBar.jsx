@@ -4,41 +4,62 @@ import React, {Component} from 'react';
 export default class ChatBar extends Component{
   constructor() {
     super();
-    this.handleChange = this.handleChange.bind(this);
-    this.submitHandler = this.submitHandler.bind(this);
     this.state = {
+      nameField: '',
       inputField: ''
     };
-  }
-   submitHandler(evt){
-    evt.preventDefault();
+  };
 
+   submitHandler = (evt) =>{
+    evt.preventDefault();
+    //console.log(this.state.nameField,this.state.inputField);
     this.props.messages(this.state.inputField);
     this.setState({
       inputField: ''
     });
-  }
+  };
 
-   handleChange (event){
+   nameSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.props.user(this.state.nameField);
+    this.setState({
+      nameField: this.state.nameField
+    });
+  };
+
+   handleContentChange = (event) => {
     this.setState({
       inputField: event.target.value
     });
   };
+
+  handleNameChange = (event) => {
+    this.setState({
+      nameField: event.target.value
+    });
+  };
+
   render(){
     return(
+
       <footer className="chatbar">
-              <form onSubmit={this.submitHandler}>
+          <form onSubmit={this.nameSubmitHandler}>
+            <input className="chatbar-username" placeholder="Your Name (Optional)" 
+                  value={this.state.nameField}
+                  onChange={this.handleNameChange} 
+                  />
+            <input hidden type="submit" />
 
-          <input className="chatbar-username" placeholder="Your Name (Optional)" 
-                 defaultValue={this.props.user}
-                />
-          <input className="chatbar-message" placeholder="Type a message and hit ENTER"                
-                value={this.state.inputField}
-                onChange={this.handleChange} />
-          <input type="submit" />
-                        </form>
+          </form>
 
+          <form onSubmit={this.submitHandler}>
+            <input className="chatbar-message" placeholder="Type a message and hit ENTER"                
+                  value={this.state.inputField}
+                  onChange={this.handleContentChange} /><br/>
+            <input hidden type="submit" />
+          </form>
       </footer>
+
     );
   }
 }
