@@ -12,7 +12,7 @@ class App extends Component {
       currentUser: {name: "Anonymous"}, // optional. if currentUser is not defined, it means the user is Anonymous
       messages: [],
       notification: '',
-      usersOnline: 0
+      usersOnline: 0,
     };
   }
   
@@ -24,39 +24,36 @@ class App extends Component {
 
     this.socket.onmessage = (event) => {
       let eventParse = JSON.parse(event.data) 
-      //this.setState({usersOnline : eventParse});  
-      //console.log(event.data);
+
       switch(eventParse.type) {
         case "incomingMessage":
           // handle incoming message
+          console.log("eventParse: " + eventParse.colours)
           const newMsg = {
                 id: eventParse.id,
                 username: eventParse.username,
                 content: eventParse.content,
+                colours: eventParse.colours
               }    
               let oldMessage = this.state.messages;
               let newMessages = [...oldMessage, newMsg];
-              this.setState({messages : newMessages});             
+              this.setState({
+                messages : newMessages, 
+              });             
           break;
 
         case "incomingNotification":
-          // handle incoming notification
-          const newNotify = {
-            username: eventParse.username,
-            content: eventParse.content,
-          }    
-
-          oldMessage = this.state.messages;
-          newMessages = [...oldMessage, newNotify];
+          // handle incoming notification  
           this.setState({
-          currentUser : 
-            {name : eventParse.username},
-          notification : eventParse.content
-        })
+            notification : eventParse.content
+          })
           break;
 
         case "incomingUsers":
-          this.setState({usersOnline : eventParse.numberOfUsers});    
+          this.setState({
+            usersOnline : eventParse.numberOfUsers,
+            //colours : eventParse.colours
+          });    
           break;
 
         default:
@@ -84,17 +81,13 @@ class App extends Component {
         content: `${this.state.currentUser.name} has changed their name to ${usr}`,
         username: usr,
       }
+      this.setState({
+        currentUser:{
+          name:usr,
+      }});
       this.socket.send(JSON.stringify(newUsername));
     }
   }
-
-  getUsersOnline = () =>{
-    const users = {
-      type: "postUsers",
-    }
-    this.socket.send(JSON.stringify(users));
-  }
-
 
   render() {
     return (
@@ -103,9 +96,9 @@ class App extends Component {
             <a href="/" className="navbar-brand">Chatty</a>
            <span className="users">{this.state.usersOnline} Users Online</span>
            </nav>
-          <MessageList messages={this.state.messages} />
+          <MessageList messages={this.state.messages} notification={this.state.notification}/>
           <ChatBar user={this.changeUsername} messages={this.addMessage}/>
-          <Message notification={this.state.notification}/>
+          {/* <Message notification={this.state.notification}/> */}
        </div>
     );
   }

@@ -12,7 +12,6 @@ export default class ChatBar extends Component{
 
    submitHandler = (evt) =>{
     evt.preventDefault();
-    //console.log(this.state.nameField,this.state.inputField);
     this.props.messages(this.state.inputField);
     this.setState({
       inputField: ''
