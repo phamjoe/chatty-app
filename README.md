@@ -3,7 +3,7 @@ Chatty App
 
 A Slack-like application that allows users to chat to one another.
 
-### Usage
+## Getting Started
 Install the dependencies for client-side and server-side. Start both servers.
 
 ```
@@ -17,16 +17,7 @@ node server.js
 open http://localhost:3000
 ```
 
-
-### Linting
-
-This boilerplate project includes React ESLint configuration.
-
-```
-npm run lint
-```
-
-### Dependencies
+## Dependencies
 
 * React
 * React-DOM
@@ -34,7 +25,7 @@ npm run lint
 * [babel-loader](https://github.com/babel/babel-loader)
 * [webpack-dev-server](https://github.com/webpack/webpack-dev-server)
 
-### Final Product
+## Final Product
 1. Main Page
 !["Screenshot of application" ](https://github.com/phamjoe/chatty-app/blob/master/screenshots/ss.png)
 
