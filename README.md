@@ -4,7 +4,7 @@ Chatty App
 A Slack-like application that allows users to chat to one another.
 
 ### Usage
-Install the dependencies for client-side and server side. Start both servers.
+Install the dependencies for client-side and server-side. Start both servers.
 
 ```
 npm install
@@ -33,3 +33,9 @@ npm run lint
 * Webpack
 * [babel-loader](https://github.com/babel/babel-loader)
 * [webpack-dev-server](https://github.com/webpack/webpack-dev-server)
+
+### Final Product
+1. Main Page
+!["Screenshot of application" ](https://github.com/phamjoe/tweeter/blob/master/docs/main.png)
+
+
