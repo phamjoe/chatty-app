@@ -36,6 +36,6 @@ npm run lint
 
 ### Final Product
 1. Main Page
-!["Screenshot of application" ](https://github.com/phamjoe/tweeter/blob/master/docs/main.png)
+!["Screenshot of application" ](https://github.com/phamjoe/chatty-app/blob/master/screenshots/ss.png)
 
 
