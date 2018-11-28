@@ -24,16 +24,15 @@ class App extends Component {
 
     this.socket.onmessage = (event) => {
       let eventParse = JSON.parse(event.data) 
-
       switch(eventParse.type) {
         case "incomingMessage":
           // handle incoming message
-          console.log("eventParse: " + eventParse.colours)
           const newMsg = {
                 id: eventParse.id,
                 username: eventParse.username,
                 content: eventParse.content,
-                colours: eventParse.colours
+                colours: eventParse.colours,
+                imageURL: eventParse.imageURL,
               }    
               let oldMessage = this.state.messages;
               let newMessages = [...oldMessage, newMsg];
@@ -43,7 +42,8 @@ class App extends Component {
           break;
 
         case "incomingNotification":
-          // handle incoming notification  
+          // handle incoming notification
+
           this.setState({
             notification : eventParse.content
           })
@@ -52,7 +52,6 @@ class App extends Component {
         case "incomingUsers":
           this.setState({
             usersOnline : eventParse.numberOfUsers,
-            //colours : eventParse.colours
           });    
           break;
 
@@ -96,9 +95,9 @@ class App extends Component {
             <a href="/" className="navbar-brand">Chatty</a>
            <span className="users">{this.state.usersOnline} Users Online</span>
            </nav>
-          <MessageList messages={this.state.messages} notification={this.state.notification}/>
+          <MessageList messages={this.state.messages}/>
           <ChatBar user={this.changeUsername} messages={this.addMessage}/>
-          {/* <Message notification={this.state.notification}/> */}
+          <Message notification={this.state.notification}/>
        </div>
     );
   }
