@@ -43,7 +43,6 @@ class App extends Component {
 
         case "incomingNotification":
           // handle incoming notification
-
           this.setState({
             notification : eventParse.content
           })

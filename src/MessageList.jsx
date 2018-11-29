@@ -8,6 +8,7 @@ export default class MessageList extends Component{
       <div className="message" key={msg.id}>
         <span className="message-username" style={{color: "" + `${msg.colours}`}}> {msg.username}</span>
         <span className="message-content">{msg.content}
+        
         <img className="image" src={msg.imageURL}/>
         </span>
        
