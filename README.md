@@ -18,6 +18,11 @@ node server.js
 open http://localhost:3000
 ```
 
+## Features
+* Multiple users can connect and chat
+* Users are assigned a random color for their username (up to 4)
+* Users can display image URLs
+
 ## Dependencies
 
 * React
