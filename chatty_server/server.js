@@ -4,15 +4,18 @@ const express = require('express');
 const WebSocket = require('ws');
 const SocketServer = WebSocket.Server;
 const uuidv1 = require('uuid/v1');
+const querystring = require('querystring');
+const fetch = require('node-fetch');
+
 
 // Set the port to 3001
 const PORT = 3001;
 
 // Create a new express server
 const server = express()
-   // Make the express server serve static assets (html, javascript, css) from the /public folder
+  // Make the express server serve static assets (html, javascript, css) from the /public folder
   .use(express.static('public'))
-  .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`));
+  .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${PORT}`));
 
 // Create the WebSockets server
 const wss = new SocketServer({ server });
@@ -23,120 +26,106 @@ const colours = ['red', 'green', 'blue', 'pink'];
 // When a client connects they are assigned a socket, represented by
 // the ws parameter in the callback.
 
-  getImageUrl = (entry) =>{
+getImageUrl = (entry) => {
   const imageExpression = /^.*(.jpg|.png|.gif)$/gi
-  if(imageExpression.test(entry)){
+  if (imageExpression.test(entry)) {
     let splitArray = entry.split(' ');
-    if(splitArray.length > 1){
+    if (splitArray.length > 1) {
       const url = splitArray.filter(value => imageExpression.test(value));
       return url;
     }
     //handles entry when only URL is passed
     return entry;
   }
-  else{
+  else {
     //if no URL is passed imageURL is blank
     return '';
   }
 }
 
-  getContent = (entry) => {
+getContent = (entry) => {
   const imageExpression = /^.*(.jpg|.png|.gif)$/gi
-    let splitArray = entry.split(' ');
-  if(imageExpression.test(entry)){
+  let splitArray = entry.split(' ');
+  if (imageExpression.test(entry)) {
 
-    if(splitArray.length > 1){
+    if (splitArray.length > 1) {
       const msg = splitArray.filter(value => (!imageExpression.test(value)));
-      return msg;
+      return msg.join(' ');
     }
-    else{
+    else {
       return '';
     }
   }
-    return entry;
-  }
-
-
+  return entry;
+}
 
 
 wss.on('connection', (ws) => {
   console.log('Client connected');
 
   usersConnected.push(ws);
-  const random = colours[Math.floor(Math.random()*colours.length)];
+  const random = colours[Math.floor(Math.random() * colours.length)];
   let users = {
-    type : "incomingUsers",
-    numberOfUsers : usersConnected.length,
-    colours : random
+    type: "incomingUsers",
+    numberOfUsers: usersConnected.length,
+    colours: random
   }
 
-  wss.clients.forEach(function each(client){
+  wss.clients.forEach(function each(client) {
     if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(users));
+      client.send(JSON.stringify(users));
     }
   })
 
-  ws.on('message', function(data) {
+  ws.on('message', function (data) {
     let uid = JSON.parse(data);
-    //let image = JSON.parse(data);
+    let matches = uid.content.match(/^\/giphy (.+)/)
 
-    switch(uid.type) {
+    switch (uid.type) {
       case 'postMessage':
         uid.id = uuidv1();
         uid.type = "incomingMessage";
         uid.imageURL = getImageUrl(uid.content);
         uid.content = getContent(uid.content);
         uid.colours = random;
-      break;
+        break;
 
-      case 'postNotification' :
+      case 'postNotification':
         uid.type = "incomingNotification";
-      break;
+        break;
     }
-    data = JSON.stringify(uid);
-    wss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(data);
-      }
-    });
 
+    if (matches) {
+      const qs = querystring.stringify({
+        api_key: "nD0C2J4V7IQlcurU11m1rRzwWGcw79FY",
+        tag: matches[1]
+      })
+      fetch(`https://api.giphy.com/v1/gifs/random?${qs}`)
+        .then(resp => resp.json())
+        .then(json => {
+          uid.content = `<div>
+                               <img src="${json.data.images.original.url}" alt="${matches[1]}"/>
+                               <div>${matches[0]}</div>
+                            </div>`
+          data = JSON.stringify(uid);
+          wss.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(data);
+            }
 
-      // if(uid.type === 'postMessage'){
-      //   uid.id = uuidv1();
-      //   uid.type = "incomingMessage";
-      //   data = JSON.stringify(uid);
-      //   //console.log(data)
-      //   wss.clients.forEach(function each(client) {
-      //     //console.log(client !== ws && client.readyState === WebSocket.OPEN);
-      //     if (/*client !== ws && */client.readyState === WebSocket.OPEN) {
-      //       client.send(data);
-      //     }
-      //   });
-      // }
+          });
+        })
 
-      // if(uid.type === 'postNotification'){
-      //   uid.type = "incomingNotification";
-      //   data = JSON.stringify(uid);
-      //   console.log(data)
-      //   wss.clients.forEach(function each(client) {
-      //     //console.log(client !== ws && client.readyState === WebSocket.OPEN);
-      //     if (/*client !== ws && */client.readyState === WebSocket.OPEN) {
-      //       client.send(data);
-      //     }
-      //   });
-      // }
+    } else {
 
-      //  if(uid.type === 'postUsers'){
-      //   uid.type = "incomingUsers";
-      //   data = JSON.stringify(uid);
-      //   console.log(data)
-      //   wss.clients.forEach(function each(client) {
-      //     //console.log(client !== ws && client.readyState === WebSocket.OPEN);
-      //     if (/*client !== ws && */client.readyState === WebSocket.OPEN) {
-      //       client.send(data);
-      //     }
-      //   });
-      // }
+      data = JSON.stringify(uid);
+      wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(data);
+        }
+
+      });
+    }
   });
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
@@ -144,14 +133,14 @@ wss.on('connection', (ws) => {
     console.log('Client disconnected');
     usersConnected.pop();
     let users = {
-      type : "incomingUsers",
-      numberOfUsers : usersConnected.length
+      type: "incomingUsers",
+      numberOfUsers: usersConnected.length
     }
-    wss.clients.forEach(function each(client){
+    wss.clients.forEach(function each(client) {
       if (/*client !== ws && */client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify(users));
+        client.send(JSON.stringify(users));
       }
     })
-    });
+  });
 });
 
