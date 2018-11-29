@@ -10,6 +10,7 @@ Install the dependencies for client-side and server-side. Start both servers.
 npm install
 npm start
 
+open a new terminal
 cd into chatty_server
 npm install
 node server.js
